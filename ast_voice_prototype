@@ -1,0 +1,53 @@
+import speech_recognition as sr
+import time
+
+def run_ast_voice_prototype():
+    # Initialize recognizer and microphone
+    recognizer = sr.Recognizer()
+    mic = sr.Microphone()
+
+    # Valid commands supported by the AST system requirements
+    VALID_COMMANDS = ["left", "right", "stop"]
+    
+    print("=== AST Voice Recognition Prototype Initialized ===")
+    print("Ready for instructor commands ('left', 'right', 'stop')... Press Ctrl+C to exit.\n")
+
+    # Adjust for ambient noise (simulating FR3 background noise handling)
+    with mic as source:
+        print("[System] Adjusting for ambient noise... Please remain quiet.")
+        recognizer.adjust_for_ambient_noise(source, duration=1.0)
+        print("[System] Noise baseline set. System ready.\n")
+
+    while True:
+        try:
+            with mic as source:
+                print("[Instructor] Listening for command (Push-to-Talk active)...")
+                # Listen to the microphone input
+                audio = recognizer.listen(source, timeout=5.0, phrase_time_limit=3.0)
+            
+            print("[System] Processing and filtering audio...")
+            start_time = time.time()
+
+            # Validate against supported commands
+            if command in VALID_COMMANDS:
+                # Simulated FR5 / UC11: Audio loopback to instructor earpiece
+                print(f"[Loopback Audio] Playback to instructor: \"{command.upper()}\" ✓")
+                # Simulated FR8 / UC09: Send haptic signal to bracelets
+                print(f"[Haptic Output] Transmitting vibration pattern for '{command.upper()}' to wristbands.\n")
+            else:
+                # Simulated UC07: Reject unrecognized commands
+                print(f"[Failsafe] Warning: '{command}' is not a valid command. Command rejected. Re-prompt instructor.\n")
+
+        except sr.WaitTimeoutError:
+            print("[System] Listening timed out. No speech detected.\n")
+        except sr.UnknownValueError:
+            # Simulated UC07: Speech was unintelligible or muffled by wind/snow gear
+            print("[Failsafe] Could not understand audio (Low confidence). Command rejected.\n")
+        except sr.RequestError as e:
+            print(f"[Error] Could not request results from speech recognition service; {e}\n")
+        except KeyboardInterrupt:
+            print("\n=== AST Prototype Shutting Down Safely ===")
+            break
+
+if __name__ == "__main__":
+    run_ast_voice_prototype()
