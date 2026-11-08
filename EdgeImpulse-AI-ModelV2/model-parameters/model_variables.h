@@ -47,7 +47,7 @@
 #include "edge-impulse-sdk/classifier/inferencing_engines/engines.h"
 #include "edge-impulse-sdk/classifier/postprocessing/ei_postprocessing_common.h"
 
-const char* ei_classifier_inferencing_categories_1154907_1[] = { "go", "left", "noise", "right", "stop" };
+const char* ei_classifier_inferencing_categories_1154907_1[] = { "go", "left", "noise", "right", "stop", "unknown" };
 
 ei_dsp_named_axis_t ei_dsp_config_1154907_2_named_axes[] = {
     { .name = "Signal", .axis = 0 }
@@ -73,29 +73,7 @@ ei_dsp_config_mfcc_t ei_dsp_config_1154907_2 = {
     1 // int pre_shift
 };
 
-ei_dsp_named_axis_t ei_dsp_config_1154907_3_named_axes[] = {
-    { .name = "Signal", .axis = 0 }
-};
-size_t ei_dsp_config_1154907_3_named_axes_size = 1;
-EI_CLASSIFIER_DSP_AXES_INDEX_TYPE ei_dsp_config_1154907_3_axes[] = { 0 };
-const uint32_t ei_dsp_config_1154907_3_axes_size = 1;
-ei_dsp_config_mfe_t ei_dsp_config_1154907_3 = {
-    3, // uint32_t blockId
-    4, // int implementationVersion
-    1, // int length of axes
-    ei_dsp_config_1154907_3_named_axes, // named axes
-    ei_dsp_config_1154907_3_named_axes_size, // size of the named axes array
-    0.02f, // float frame_length
-    0.01f, // float frame_stride
-    40, // int num_filters
-    256, // int fft_length
-    0, // int low_frequency
-    0, // int high_frequency
-    101, // int win_size
-    -52 // int noise_floor_db
-};
-
-const uint8_t ei_dsp_blocks_1154907_1_size = 2;
+const uint8_t ei_dsp_blocks_1154907_1_size = 1;
 ei_model_dsp_t ei_dsp_blocks_1154907_1[ei_dsp_blocks_1154907_1_size] = {
     { // DSP block 2
         2,
@@ -104,17 +82,6 @@ ei_model_dsp_t ei_dsp_blocks_1154907_1[ei_dsp_blocks_1154907_1_size] = {
         (void*)&ei_dsp_config_1154907_2, // pointer to config struct
         ei_dsp_config_1154907_2_axes, // array of offsets into the input stream, one for each axis
         ei_dsp_config_1154907_2_axes_size, // number of axes
-        1, // version
-        nullptr, // factory function
-        nullptr, // data normalization config
-    },
-    { // DSP block 3
-        3,
-        3960, // output size
-        &extract_mfe_features, // DSP function pointer
-        (void*)&ei_dsp_config_1154907_3, // pointer to config struct
-        ei_dsp_config_1154907_3_axes, // array of offsets into the input stream, one for each axis
-        ei_dsp_config_1154907_3_axes_size, // number of axes
         1, // version
         nullptr, // factory function
         nullptr, // data normalization config
@@ -143,8 +110,8 @@ ei_learning_block_config_tflite_graph_t ei_learning_block_config_1154907_4 = {
 };
 
 const uint8_t ei_learning_blocks_1154907_1_size = 1;
-const uint32_t ei_learning_block_1154907_4_inputs[2] = { 2,3 };
-const uint8_t ei_learning_block_1154907_4_inputs_size = 2;
+const uint32_t ei_learning_block_1154907_4_inputs[1] = { 2 };
+const uint8_t ei_learning_block_1154907_4_inputs_size = 1;
 const ei_learning_block_t ei_learning_blocks_1154907_1[ei_learning_blocks_1154907_1_size] = {
     {
         4,
@@ -186,9 +153,9 @@ const ei_impulse_t impulse_1154907_1 = {
     .project_name = "andrewh72-project-1",
     .impulse_id = 1,
     .impulse_name = "Impulse #1",
-    .deploy_version = 1,
+    .deploy_version = 2,
 
-    .nn_input_frame_size = 4610,
+    .nn_input_frame_size = 650,
     .raw_sample_count = 16000,
     .raw_samples_per_frame = 1,
     .dsp_input_frame_size = 16000 * 1,
@@ -217,7 +184,7 @@ const ei_impulse_t impulse_1154907_1 = {
     .slices_per_model_window = 4,
 
     .has_anomaly = EI_ANOMALY_TYPE_UNKNOWN,
-    .label_count = 5,
+    .label_count = 6,
     .categories = ei_classifier_inferencing_categories_1154907_1,
     .results_type = EI_CLASSIFIER_TYPE_CLASSIFICATION,
     .freeform_outputs_size = freeform_outputs_1154907_1_size,
