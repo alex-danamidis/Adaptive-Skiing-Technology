@@ -5,7 +5,7 @@
 #include <string>
 #include <cstring>
 #include <cstdint>
-#include "edge-impulse-sdk/classifier/ei_run_classifier.h"
+#include "EdgeImpulse-AI-Model/edge-impulse-sdk/classifier/ei_run_classifier.h"
 
 using namespace std;
 
