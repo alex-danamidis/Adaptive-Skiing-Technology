@@ -114,6 +114,12 @@ endif
 	$(file >link_objects.rsp,$(COBJECTS) $(CXXOBJECTS) $(CCOBJECTS))
 	$(CXX) @link_objects.rsp -o $(BUILD_PATH)/$(NAME) $(LDFLAGS)
 
+# Run command unit tests
+.PHONY: test_commands
+test_commands:
+	$(CXX) $(CFLAGS) $(CXXFLAGS) -UNDEBUG tests/test_commands.cpp commands.cpp -o $(BUILD_PATH)/test_commands.exe
+	$(BUILD_PATH)/test_commands.exe
+
 # Remove compiled object files
 .PHONY: clean
 clean:
