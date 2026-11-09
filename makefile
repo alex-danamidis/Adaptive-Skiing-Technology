@@ -22,7 +22,7 @@ CFLAGS += -DNDEBUG					# Disable assert() macro
 CFLAGS += -DEI_CLASSIFIER_ENABLE_DETECTION_POSTPROCESS_OP	# Add TFLite_Detection_PostProcess operation
 
 # C++ only compiler flags
-CXXFLAGS += -std=c++14				# Use C++14 standard
+CXXFLAGS += -std=c++17				# Use C++17 standard
 
 # Linker flags
 LDFLAGS += -lm 						# Link to math.h

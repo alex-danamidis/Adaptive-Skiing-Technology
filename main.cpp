@@ -4,10 +4,12 @@
 #include <vector>
 #include <string>
 #include <cstring>
-#include <cstdint>
-#include "EdgeImpulse-AI-Model/edge-impulse-sdk/classifier/ei_run_classifier.h"
+#include <filesystem>
+#include <iomanip>
+#include "edge-impulse-sdk/classifier/ei_run_classifier.h"
 
 using namespace std;
+namespace fs = std::filesystem;
 
 #pragma pack(push, 1)
 struct WavHeader{
@@ -88,30 +90,15 @@ bool read_wav_file(const string& path, vector<float>& pcm_floats){
     return true;
 }
 
-
-int main(int argc, char **argv) {
-    string audio_file_path = "";
-
-    for(int i = 1; i < argc; i++){
-        if((strcmp(argv[i], "-f") == 0 || strcmp(argv[i], "--file") == 0)){
-            audio_file_path = argv[++i];
-        }
-    }
-
-    if(audio_file_path.empty()){
-        cerr << "Usage: " << argv[0] << " --file <path_to_wav_file>\n";
-        cerr << "Example: " << argv[0] << " --file samples/stop_01.wav\n";
-        return 1;
-    }
-
+void classify_file(const string& file_path, bool verbose=false){
     vector<float> audio_buffer;
-    if(!read_wav_file(audio_file_path, audio_buffer)){
-        return 1;
+    if(!read_wav_file(file_path, audio_buffer)){
+        cerr << "Skipping file: " << file_path << "\n";
+        return;
     }
 
     g_audio_signal.buffer = audio_buffer.data();
     g_audio_signal.total_samples = audio_buffer.size();
-
 
     signal_t signal;            // Wrapper for raw input buffer
     signal.total_length = EI_CLASSIFIER_RAW_SAMPLE_COUNT;
@@ -120,12 +107,9 @@ int main(int argc, char **argv) {
     EI_IMPULSE_ERROR res = run_classifier(&signal, &result, false);       // Return code from inference
     if(res != EI_IMPULSE_OK){
         cerr << "Error: run_classifier failed with code: " << res << "\n";
-        return 1;
+        return;
     }
 
-    // Print return code and how long it took to perform inference
-    cout << "\n--- Classification Results ---\n";
-    cout << "Timing: DSP " << result.timing.dsp << "ms, inference " << result.timing.classification << " ms, anomaly " << result.timing.anomaly << "ms\n\n";
     string top_label = "";
     float top_score = 0.0f;
 
@@ -136,6 +120,80 @@ int main(int argc, char **argv) {
             top_label = result.classification[i].label;
         }
     }
-    cout << "\nPredicted Command: [" << top_label << "] (confidence: " << (top_score * 100.0f) << "%)\n";
+    if(verbose){
+        cout << "\nClassification Results: " << file_path << "\n";
+        cout << "Timing: DSP " << result.timing.dsp << "ms, inference " << result.timing.classification << " ms, anomaly " << result.timing.anomaly << " ms\n\n";
+
+        for(size_t i = 0; i < EI_CLASSIFIER_LABEL_COUNT; i++){
+            cout << " " << left << setw(12) << result.classification[i].label << ": " << fixed << setprecision(3) << result.classification[i].value << "\n";
+        }
+        cout << "\nPredicted Command: [" << top_label << "] (confidence: " << fixed << setprecision(1) << (top_score * 100.0f) << "%)\n";
+    }
+    else{
+        cout << left << setw(35) << fs::path(file_path).filename().string() << " -> [" << setw(8) << top_label << "] " << fixed << setprecision(1) << (top_score * 100.0f) << "%\n";
+    }
+}
+
+int main(int argc, char **argv) {
+    string target_path = "";
+    bool is_directory = false;
+
+    for(int i = 1; i < argc; i++){
+        if((strcmp(argv[i], "-f") == 0 || strcmp(argv[i], "--file") == 0)){
+            if(i + 1 < argc){
+                target_path = argv[++i];
+                is_directory = false;
+            }
+            else{
+                cerr << "Error: " << argv[i] << " requires a file path.\n";
+                return 1;
+            }
+        }
+        else if(strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--dir") == 0){
+            if(i + 1 < argc){
+                target_path = argv[++i];
+                is_directory = true;
+            }
+            else{
+                cerr << "Error: " << argv[i] << " requires a directory path.\n";
+                return 1;
+            }
+        }
+        else if(argv[i][0] != '-'){
+            target_path = argv[i];
+        }
+    }
+
+    if(target_path.empty()){
+        cerr << "Usage:\n"; 
+        cerr << " Single file: " << argv[0] << " -f <path_to_wav_file>\n";
+        cerr << " Directory: " << argv[0] << " -d <path_to_directory>\n";
+        cerr << "Example:\n"; 
+        cerr << " " << argv[0] << " -f samples/stop_01.wav\n";
+        cerr << " " << argv[0] << " -d wavSamples/\n";
+        return 1;
+    }
+
+    if(!fs::exists(target_path)){
+        cerr << "Error: Path does not exist: " << target_path << "\n";
+        return 1;
+    }
+    if(fs::is_directory(target_path)){
+        is_directory = true;
+    }
+    if(is_directory){
+        cout << "\nProcessing Directory: " << target_path << "\n";
+        int count = 0;
+        for(const auto& entry : fs::directory_iterator(target_path)){
+            if(entry.is_regular_file() && entry.path().extension() == ".wav"){
+                classify_file(entry.path().string(), false);
+                count++;
+            }
+        }
+        cout << "\nCompleted processing " << count << " files.\n";
+    }
+    else{
+        classify_file(target_path, true);
+    }
     return 0;
 }
