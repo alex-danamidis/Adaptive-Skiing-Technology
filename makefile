@@ -7,7 +7,7 @@ NAME = app
 BUILD_PATH = ./build
 
 # Location of main.cpp (must use C++ compiler for main)
-CXXSOURCES = main.cpp
+CXXSOURCES = main.cpp commands.cpp
 
 # Search path for header files (current directory)
 CFLAGS += -I.
@@ -111,7 +111,8 @@ ifeq ($(OS), Windows_NT)
 else
 	mkdir -p $(BUILD_PATH)
 endif
-	$(CXX) $(COBJECTS) $(CXXOBJECTS) $(CCOBJECTS) -o $(BUILD_PATH)/$(NAME) $(LDFLAGS)
+	$(file >link_objects.rsp,$(COBJECTS) $(CXXOBJECTS) $(CCOBJECTS))
+	$(CXX) @link_objects.rsp -o $(BUILD_PATH)/$(NAME) $(LDFLAGS)
 
 # Remove compiled object files
 .PHONY: clean
