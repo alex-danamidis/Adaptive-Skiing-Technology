@@ -8,6 +8,8 @@
 #include <iomanip>
 #include "edge-impulse-sdk/classifier/ei_run_classifier.h"
 
+#include "commands.h"
+
 using namespace std;
 namespace fs = std::filesystem;
 
@@ -110,16 +112,20 @@ void classify_file(const string& file_path, bool verbose=false){
         return;
     }
 
-    string top_label = "";
-    float top_score = 0.0f;
+    // converts results to a vector
+    std::vector<CommandPrediction> scores;
 
-    for(size_t i = 0; i < EI_CLASSIFIER_LABEL_COUNT; i++){
-        cout << " " << result.classification[i].label << ": " << result.classification[i].value << "\n";
-        if(result.classification[i].value > top_score){
-            top_score = result.classification[i].value;
-            top_label = result.classification[i].label;
-        }
+    for (size_t i = 0; i < EI_CLASSIFIER_LABEL_COUNT; i++) {
+        CommandPrediction prediction;
+        prediction.label = result.classification[i].label;
+        prediction.confidence = result.classification[i].value;
+        scores.push_back(prediction);
     }
+
+    // classify and validate the command
+    CommandPrediction prediction = classifyCommand(scores);
+    Command command = validateCommand(prediction);
+
     if(verbose){
         cout << "\nClassification Results: " << file_path << "\n";
         cout << "Timing: DSP " << result.timing.dsp << "ms, inference " << result.timing.classification << " ms, anomaly " << result.timing.anomaly << " ms\n\n";
@@ -127,10 +133,18 @@ void classify_file(const string& file_path, bool verbose=false){
         for(size_t i = 0; i < EI_CLASSIFIER_LABEL_COUNT; i++){
             cout << " " << left << setw(12) << result.classification[i].label << ": " << fixed << setprecision(3) << result.classification[i].value << "\n";
         }
-        cout << "\nPredicted Command: [" << top_label << "] (confidence: " << fixed << setprecision(1) << (top_score * 100.0f) << "%)\n";
+        cout << "\nPredicted Command: [" << prediction.label << "] (confidence: " << fixed << setprecision(1) << (prediction.confidence * 100.0f) << "%)\n";
     }
     else{
-        cout << left << setw(35) << fs::path(file_path).filename().string() << " -> [" << setw(8) << top_label << "] " << fixed << setprecision(1) << (top_score * 100.0f) << "%\n";
+        cout << left << setw(35) << fs::path(file_path).filename().string() << " -> [" << setw(8) << prediction.label << "] " << fixed << setprecision(1) << (prediction.confidence * 100.0f) << "%\n";
+    }
+
+    // check if command was accepted
+    if (command == Command::INVALID) {
+        cout << "Command rejected.\n";
+    } else {
+        cout << "Command accepted.\n";
+        // pass command to haptic module
     }
 }
 
