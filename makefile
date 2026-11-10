@@ -7,7 +7,7 @@ NAME = app
 BUILD_PATH = ./build
 
 # Location of main.cpp (must use C++ compiler for main)
-CXXSOURCES = main.cpp commands.cpp
+CXXSOURCES = main.cpp commands.cpp haptic_link.cpp
 
 # Search path for header files (current directory)
 CFLAGS += -I.
