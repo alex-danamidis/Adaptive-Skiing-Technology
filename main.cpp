@@ -6,12 +6,17 @@
 #include <cstring>
 #include <filesystem>
 #include <iomanip>
+#include <chrono>
+#include <thread>
 #include "edge-impulse-sdk/classifier/ei_run_classifier.h"
 
 #include "commands.h"
+#include "haptic_link.h" 
+ 
 
 using namespace std;
 namespace fs = std::filesystem;
+HapticLink g_link; 
 
 #pragma pack(push, 1)
 struct WavHeader{
@@ -144,12 +149,14 @@ void classify_file(const string& file_path, bool verbose=false){
         cout << "Command rejected.\n";
     } else {
         cout << "Command accepted.\n";
+        g_link.send(command);
         // pass command to haptic module
     }
 }
 
 int main(int argc, char **argv) {
     string target_path = "";
+    string port = "";
     bool is_directory = false;
 
     for(int i = 1; i < argc; i++){
@@ -170,6 +177,14 @@ int main(int argc, char **argv) {
             }
             else{
                 cerr << "Error: " << argv[i] << " requires a directory path.\n";
+                return 1;
+            }
+        }else if(strcmp(argv[i], "-p") == 0 || strcmp(argv[i], "--port") == 0){
+            if(i + 1 < argc){
+                port = argv[++i];
+            }
+            else{
+                cerr << "Error: " << argv[i] << " requires a serial port (e.g. /dev/ttyACM0 or COM5).\n";
                 return 1;
             }
         }
@@ -195,14 +210,24 @@ int main(int argc, char **argv) {
     if(fs::is_directory(target_path)){
         is_directory = true;
     }
+    if(!port.empty()){
+        if(!g_link.open(port)){
+            cerr << "Continuing in dry-run mode (no bracelets).\n";
+        }
+    }
     if(is_directory){
         cout << "\nProcessing Directory: " << target_path << "\n";
+        g_link.setCooldownMs(0);
         int count = 0;
         for(const auto& entry : fs::directory_iterator(target_path)){
             if(entry.is_regular_file() && entry.path().extension() == ".wav"){
                 classify_file(entry.path().string(), false);
                 count++;
+                if(g_link.isOpen()){
+                    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+                }
             }
+            
         }
         cout << "\nCompleted processing " << count << " files.\n";
     }
