@@ -150,6 +150,7 @@ void classify_file(const string& file_path, bool verbose=false){
     } else {
         cout << "Command accepted.\n";
         g_link.send(command);
+        // pass command to haptic module
     }
 }
 
