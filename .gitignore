@@ -1,0 +1,12 @@
+# Compiled files
+*.o
+*.exe
+
+# Build directories
+build/
+
+# Generated linker files
+*.rsp
+
+# Local VS Code settings
+.vscode/
