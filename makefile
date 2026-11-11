@@ -106,21 +106,26 @@ $(CCOBJECTS) : %.o : %.cc
 # Build target (must use C++ compiler)
 .PHONY: app
 app: $(COBJECTS) $(CXXOBJECTS) $(CCOBJECTS)
-ifeq ($(OS), Windows_NT)
+ifeq ($(OS), Windows_NT) # if on windows, use a response file to avoid command line length limit
 	if not exist build mkdir build
+	$(file >link_objects.rsp,$(COBJECTS) $(CXXOBJECTS) $(CCOBJECTS))
+	$(CXX) @link_objects.rsp -o $(BUILD_PATH)/$(NAME) $(LDFLAGS)
 else
 	mkdir -p $(BUILD_PATH)
-endif
 	$(CXX) $(COBJECTS) $(CXXOBJECTS) $(CCOBJECTS) -o $(BUILD_PATH)/$(NAME) $(LDFLAGS)
-#	WINDOWS MAKE	
-# 	$(file >link_objects.rsp,$(COBJECTS) $(CXXOBJECTS) $(CCOBJECTS))
-# 	$(CXX) @link_objects.rsp -o $(BUILD_PATH)/$(NAME) $(LDFLAGS)
+endif
 
 # Run command unit tests
 .PHONY: test_commands
 test_commands:
 	$(CXX) $(CFLAGS) $(CXXFLAGS) -UNDEBUG tests/test_commands.cpp commands.cpp -o $(BUILD_PATH)/test_commands.exe
 	$(BUILD_PATH)/test_commands.exe
+
+# Run haptic link unit tests
+.PHONY: test_haptics
+test_haptics:
+	$(CXX) $(CFLAGS) $(CXXFLAGS) -UNDEBUG tests/test_haptics.cpp haptic_link.cpp -o $(BUILD_PATH)/test_haptics.exe
+	$(BUILD_PATH)/test_haptics.exe
 
 # Remove compiled object files
 .PHONY: clean
