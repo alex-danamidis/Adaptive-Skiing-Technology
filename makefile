@@ -111,8 +111,10 @@ ifeq ($(OS), Windows_NT)
 else
 	mkdir -p $(BUILD_PATH)
 endif
-	$(file >link_objects.rsp,$(COBJECTS) $(CXXOBJECTS) $(CCOBJECTS))
-	$(CXX) @link_objects.rsp -o $(BUILD_PATH)/$(NAME) $(LDFLAGS)
+	$(CXX) $(COBJECTS) $(CXXOBJECTS) $(CCOBJECTS) -o $(BUILD_PATH)/$(NAME) $(LDFLAGS)
+#	WINDOWS MAKE	
+# 	$(file >link_objects.rsp,$(COBJECTS) $(CXXOBJECTS) $(CCOBJECTS))
+# 	$(CXX) @link_objects.rsp -o $(BUILD_PATH)/$(NAME) $(LDFLAGS)
 
 # Run command unit tests
 .PHONY: test_commands
